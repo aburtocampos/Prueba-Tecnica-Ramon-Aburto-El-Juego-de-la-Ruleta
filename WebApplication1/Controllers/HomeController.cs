@@ -34,8 +34,16 @@ namespace WebApplication1.Controllers
         [Route("api/[controller]/getplayers")]
         public IActionResult GetPlayers()
         {
-            var respuesta = _ruleta.GetAll();
-            return Ok(respuesta);
+            try
+            {
+                var respuesta = _ruleta.GetAll();
+                return Ok(respuesta);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+               //
+            }
         }
 
         

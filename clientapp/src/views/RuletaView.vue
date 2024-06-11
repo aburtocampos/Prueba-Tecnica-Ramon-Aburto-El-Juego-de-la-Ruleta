@@ -14,7 +14,7 @@ const flag3 = ref(false)
 
 const ValoresAsar = ref({
   numero: '',
-  color: '',
+  colorRuleta: '',
   parimpar:''
 });
 
@@ -30,9 +30,6 @@ function btngirar(){
       flag3.value = true;
       traerDatos();
    
-    //  verificarApuestaColor();
-    
-      console.log("Han pasado 2 segundos.");
     }, 1000);
 }
 
@@ -40,7 +37,6 @@ function refrescarSaldo(nombre){
  return dataservice.returnPlayerByName(nombre)
       .then(response => {
         if (response.status === 204) {
-          console.log('No content');
           return null;
         } else if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
@@ -50,11 +46,8 @@ function refrescarSaldo(nombre){
       })
     .then(function(data) {
       if (data !== null) {
-        console.log("me traje de nuevo",data)
-                console.log('data.monto nuevo',data.monto);
                 formData.value.monto = data.monto;
                store.updateFormData({  monto: formData.value.monto, });
-               console.log('store nuevo',store);
                return data.monto;
         }else{
           return null;
@@ -68,20 +61,19 @@ function traerDatos(){
   dataservice.returnNumberandcolor()
     .then(response => response.json())
     .then(function(data) {
-        console.log("me traje returnNumberandcolor",data)
         store.updateColNumParData({ 
           colorRuleta: data.color,
           parimpar: data.numero % 2 === 0 ? 'par' : 'impar', 
           numero: data.numero 
         });
             if(store.index1){
-              verificarApuestaColor();
+              verificarApuestaColor(store);
             }
             if(store.index2){
               verificarApuestaParImparColor(store);
             }
             if(store.index3){
-              verificarApuestaNumeroColor();
+              verificarApuestaNumeroColor(store);
             }
     })
     .catch(error => {
@@ -89,7 +81,7 @@ function traerDatos(){
      });
 }
 
-function verificarApuestaColor(){
+function verificarApuestaColor(store){
 
   if(store.colorRuleta === store.colorApostado){
       const swalWithBootstrapButtons = Swal.mixin({
@@ -115,13 +107,12 @@ function verificarApuestaColor(){
           if (result.isConfirmed) {
             
             dataservice.savePlayer({//guarda monto ganado
-              nombre: store.nombre,
+              nombre: store.nombre.toLowerCase(),
               monto: store.monto,
               apuesta: store.apuesta / 2, //ganara la mitad de la apuesta
               }).then(() => {
              refrescarSaldo(store.nombre)
               .then(nuevoMonto => {
-                  console.log('lo que regreso si gano', nuevoMonto)
                   swalWithBootstrapButtons.fire({
                     title: "Dato Guardado!",
                     html: `<span>Nuevo Saldo:</span><h3 class="fs-3 fw-bold text-success"> $ ${nuevoMonto}</h3>`,
@@ -148,13 +139,12 @@ function verificarApuestaColor(){
         });
   }else{
     dataservice.savePlayer({ //guarda monto ganado y resta el monto al saldo
-              nombre: store.nombre,
+              nombre: store.nombre.toLowerCase(),
               monto: store.monto,
               apuesta: store.apuesta * -1, // si pierde se le resta la apuesta a su saldo
               }).then(() => {
                 refrescarSaldo(store.nombre)
                   .then(nuevoMonto => {
-                      console.log('lo que regreso si gano', nuevoMonto)
                       Swal.fire({
                       icon: "error",
                       title: "Perdiste!",
@@ -194,10 +184,7 @@ function verificarApuestaColor(){
 
 function verificarApuestaParImparColor(store){
   var valorparimparcolor = `${store.parimpar}-${store.colorRuleta}`;
-  console.log('valorparimparcolor',valorparimparcolor);
-  console.log('store.parimparcolorApostado',store.parimparcolorApostado);
   if(valorparimparcolor == store.parimparcolorApostado){
-    console.log('ganaste');
     const swalWithBootstrapButtons = Swal.mixin({
           customClass: {
             confirmButton: "btn btn-success",
@@ -221,7 +208,7 @@ function verificarApuestaParImparColor(store){
           if (result.isConfirmed) {
             
             dataservice.savePlayer({//guarda monto ganado
-              nombre: store.nombre,
+              nombre: store.nombre.toLowerCase(),
               monto: store.monto,
               apuesta: store.apuesta,// gana el total de la apuesta y se suma a su saldo
               }).then(() => {
@@ -229,7 +216,7 @@ function verificarApuestaParImparColor(store){
               .then(nuevoMonto => {
                   swalWithBootstrapButtons.fire({
                     title: "Dato Guardado!",
-                    text: `Nuevo Saldo: $ ${nuevoMonto}`,
+                    html: `Nuevo Saldo: <span class="fw-bold text-success">$ ${nuevoMonto}</span>`,
                     icon: "success"
                   }).then((result) => {
                     if (result.isConfirmed) {
@@ -249,9 +236,8 @@ function verificarApuestaParImparColor(store){
           }
         });
   }else{
-    console.log('perdiste');
     dataservice.savePlayer({ //guarda monto ganado y resta el monto al saldo
-              nombre: store.nombre,
+              nombre: store.nombre.toLowerCase(),
               monto: store.monto,
               apuesta: store.apuesta * -1, // si pierde se le resta la apuesta a su saldo
               }).then(() => {
@@ -291,10 +277,7 @@ function verificarApuestaParImparColor(store){
 
 function verificarApuestaNumeroColor(){
   var valornumerocolor = `${store.numero}-${store.colorRuleta}`;
-  console.log('valornumerocolor',valornumerocolor);
-  console.log('store.numerocolorApostado',store.numerocolorApostado);
   if(valornumerocolor == store.numerocolorApostado){
-    console.log('ganaste');
     const swalWithBootstrapButtons = Swal.mixin({
           customClass: {
             confirmButton: "btn btn-success",
@@ -346,7 +329,6 @@ function verificarApuestaNumeroColor(){
           }
         });
   }else{
-    console.log('perdiste');
     dataservice.savePlayer({ //guarda monto ganado y resta el monto al saldo
               nombre: store.nombre,
               monto: store.monto,
@@ -392,7 +374,7 @@ function verificarApuestaNumeroColor(){
     <div class="top">
       <h1 class="text-white"  >Gira la ruleta</h1> 
       <div class="box text-end">
-        <h2 class="text-white text-capitalize fs-5">Saldo: <span class="text-warning">$ {{ store.monto }} {{ store.colorRuleta }}{{ ValoresAsar.color }}</span></h2>
+        <h2 class="text-white text-capitalize fs-5">Saldo: <span class="text-warning">$ {{ store.monto }}</span></h2>
         <h2 class="text-white text-capitalize">Jugador: <span class="text-warning">{{ store.nombre }}</span></h2>
       </div>
     </div>

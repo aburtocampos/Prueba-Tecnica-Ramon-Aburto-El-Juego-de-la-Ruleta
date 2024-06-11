@@ -20,7 +20,6 @@ function handleNameChange(nombre){
   dataservice.returnPlayerByName(nombre)
       .then(response => {
         if (response.status === 204) {
-          console.log('No content');
           return null;
         } else if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
@@ -30,8 +29,6 @@ function handleNameChange(nombre){
       })
     .then(function(data) {
       if (data !== null) {
-        console.log("me traje",data)
-                console.log('data.monto',data.monto);
                 formData.value.monto = data.monto;
 
     }else{
@@ -62,7 +59,6 @@ router.push("/ruleta");
 
 onMounted(() => {
  if(store.isNotEmpty()){
-    console.log('datos vacios',store);
   }else{
     store.updateFormData({ 
           nombre: '',
